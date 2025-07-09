@@ -7,18 +7,24 @@ const bcrypt = require('bcrypt');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 5000;  // ✅ Automatic port for deployment
-const SECRET = process.env.SECRET || "your_secret_key"; // ✅ Use env var in production
+const PORT = process.env.PORT || 5000;
+const SECRET = process.env.SECRET || "your_secret_key";
 
-// ✅ CORS: Allow only your frontend Render app & localhost
+// ✅ CORS Configuration
 const allowedOrigins = [
-  'https://expense-manager-8tm8.onrender.com', // your deployed frontend
-  'http://localhost:5000',                     // local frontend (optional)
+  'https://expense-manager-8tm8.onrender.com',  // Frontend Render app
+  'http://localhost:5000',
   'http://127.0.0.1:5000'
 ];
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
@@ -63,13 +69,13 @@ function verifyToken(req, res, next) {
   });
 }
 
-// ✅ SEO-Friendly Routes
+// ✅ Frontend Routes
 app.get('/', (req, res) => res.redirect('/signin'));
 app.get('/signup', (req, res) => res.sendFile(path.join(__dirname, 'public', 'signup.html')));
 app.get('/signin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'signin.html')));
 app.get('/home', (req, res) => res.sendFile(path.join(__dirname, 'public', 'home.html')));
 
-// ✅ Auth Routes
+// ✅ Auth APIs
 app.post('/api/signup', async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -100,7 +106,7 @@ app.post('/api/signin', async (req, res) => {
   }
 });
 
-// ✅ Expense Routes
+// ✅ Expenses APIs
 app.post('/api/expenses', verifyToken, async (req, res) => {
   try {
     const newExpense = new Expense(req.body);
