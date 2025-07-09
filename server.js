@@ -12,8 +12,8 @@ const SECRET = process.env.SECRET || "your_secret_key";
 
 // ✅ CORS Configuration
 const allowedOrigins = [
-  'https://expense-manager-8tm8.onrender.com',  // Frontend Render app
-  'http://localhost:5000',
+  'https://expense-manager-8tm8.onrender.com',   // ✅ Your deployed frontend
+  'http://localhost:5000',                       // ✅ Localhost for development
   'http://127.0.0.1:5000'
 ];
 
@@ -25,10 +25,15 @@ app.use(cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 
+// ✅ Handle Preflight requests globally
+app.options('*', cors());
+
+// ✅ Middleware
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -69,13 +74,13 @@ function verifyToken(req, res, next) {
   });
 }
 
-// ✅ Frontend Routes
+// ✅ SEO-Friendly Routes
 app.get('/', (req, res) => res.redirect('/signin'));
 app.get('/signup', (req, res) => res.sendFile(path.join(__dirname, 'public', 'signup.html')));
 app.get('/signin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'signin.html')));
 app.get('/home', (req, res) => res.sendFile(path.join(__dirname, 'public', 'home.html')));
 
-// ✅ Auth APIs
+// ✅ Auth Routes
 app.post('/api/signup', async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -106,7 +111,7 @@ app.post('/api/signin', async (req, res) => {
   }
 });
 
-// ✅ Expenses APIs
+// ✅ Expense Routes
 app.post('/api/expenses', verifyToken, async (req, res) => {
   try {
     const newExpense = new Expense(req.body);
